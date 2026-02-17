@@ -87,23 +87,6 @@ Repair loops have a budget of **max 3 attempts** — after exhaustion, the issue
     ├── CONTRACT.md           # Global agent I/O contract
     └── WORKFLOW.md           # State machine, dispatch rules
 ```
-
-## Demo projects
-
-### 🍅 FocusFlow (demo-pomidoro)
-
-A Pomodoro Timer app with a distraction journal. Vanilla JS, zero dependencies, static hosting.
-
-**Features:** 25-min timer (Date.now-based), idle/running/paused/completed states, distraction journal with validation, daily counters, localStorage, JSON import/export, keyboard shortcuts.
-
-**Status:** ✅ DONE — fully delivered by the agent pipeline.
-
-### 🚦 Traffic Simulator (demo-traffic-simulator)
-
-A minimal intersection traffic simulation. Vanilla JS + Canvas API, zero dependencies.
-
-**Features:** map and vehicle rendering on canvas, braking logic, traffic lights, parameter controls (intensity, speed, density), live statistics (active vehicles, average speed, throughput).
-
 ## Tech stack
 
 - **Environment:** VS Code + GitHub Copilot Chat (custom agents / chat participants)
@@ -123,3 +106,18 @@ A minimal intersection traffic simulation. Vanilla JS + Canvas API, zero depende
 7. **Integrator** ensures green build, **Docs** generates documentation
 8. Orchestrator closes the session with `DONE` status and generates `report.md`
 
+## Demo projects
+
+### 🍅 FocusFlow (demo-pomidoro)
+
+A Pomodoro Timer app with a distraction journal. Vanilla JS, zero dependencies, static hosting.
+
+**Features:** 25-min timer (Date.now-based), idle/running/paused/completed states, distraction journal with validation, daily counters, localStorage, JSON import/export, keyboard shortcuts.
+
+**Status:** ✅ DONE — fully delivered by the agent pipeline.
+
+### 🚦 Traffic Simulator (demo-traffic-simulator)
+
+A minimal intersection traffic simulation. Vanilla JS + Canvas API, zero dependencies.
+
+**Features:** map and vehicle rendering on canvas, braking logic, traffic lights, parameter controls (intensity, speed, density), live statistics (active vehicles, average speed, throughput).
