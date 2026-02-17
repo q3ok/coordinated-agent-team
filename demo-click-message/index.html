@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Click Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Simple Click Demo</h1>
+      <p class="helper">Kliknij przycisk, aby zaktualizować wynik.</p>
+
+      <section class="card" aria-labelledby="action-heading">
+        <h2 id="action-heading" class="sr-only">Akcja</h2>
+        <button id="action-button" type="button">Pokaż wiadomość</button>
+        <p id="output" class="output" aria-live="polite">Kliknij przycisk, aby zobaczyć wynik.</p>
+      </section>
+
+      <noscript>
+        <p>Ta strona wymaga włączonego JavaScript.</p>
+      </noscript>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

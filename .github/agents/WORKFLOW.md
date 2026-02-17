@@ -40,7 +40,7 @@ Gate: tasks have dependencies, acceptance_checks and done_when
 ### IMPLEMENT_LOOP
 For each task ready (deps done):
 - Coder implements
-- Reviewer reviews
+- Reviewer reviews (with ALL session-changed files, not just current task — see full-scope context rule below)
 - QA tests (if the task concerns behavior/logic or acceptance)
 - Security (if risk_flags contains security or affects auth/input/network)
 Gate per task:
@@ -48,6 +48,24 @@ Gate per task:
 - QA OK (if required)
 - Security OK (if required). If Security returns `NEEDS_DECISION` (medium findings), Orchestrator enters ASK_USER before proceeding.
 - Task marked `status: implemented` by Coder, then promoted to `completed` by Orchestrator after all gates pass
+
+#### Full-scope context rule for Reviewer
+Orchestrator MUST provide Reviewer with the list of ALL files changed during the entire session (not just the current task's files) via a `session_changed_files` field in the `task` object. This is separate from `context_files` (which lists session artifacts like `spec.md`, `architecture.md`, etc.).
+
+**Per-task review (incremental)**: Reviewer receives `session_changed_files` for awareness but focuses deep reading on the current task's files. Reviewer checks `session_changed_files` selectively — only following dependencies and callers of the current task's changes to detect cross-task interactions.
+
+**Final review (comprehensive)**: Reviewer reads all non-deleted files from `session_changed_files` in full and reviews deleted files via diff only. This is the exhaustive cross-cutting pass.
+
+This two-tier approach keeps per-task reviews efficient (O(1) per task) while the final review provides full O(n) coverage once.
+
+#### Cross-task final review (mandatory in full mode)
+After ALL tasks in IMPLEMENT_LOOP reach `completed` status, and BEFORE entering INTEGRATE:
+1. Orchestrator dispatches Reviewer one final time with `task.id: "meta"` and `task.goal: "Cross-task final review of all session changes"`.
+2. `session_changed_files` in `task` MUST list ALL files changed during the session (by any agent — Coder, Integrator, Docs, etc.) with `change_type` per entry. `context_files` lists session artifacts as usual.
+3. Reviewer reads the full content of every non-deleted file in `session_changed_files` and applies the full checklist with focus on cross-cutting concerns: interface consistency between tasks, no duplicated logic, no conflicting assumptions, no regressions from task interactions. For deleted files, Reviewer verifies intentional removal and no dangling references via diff.
+4. Gate: Final review must be OK (or PASS WITH NOTES). If BLOCKED, enter FIX_REVIEW targeting the specific findings.
+
+This step is skipped in lean mode (single-task, already reviewed).
 
 ### ASK_USER
 Trigger: Orchestrator enters this state when human judgment is needed.

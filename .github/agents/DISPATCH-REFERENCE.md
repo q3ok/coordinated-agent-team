@@ -26,7 +26,7 @@ Your MANDATORY first steps:
 5. Return your output as JSON per CONTRACT.md.
 ```
 
-`{FULL_INPUT_JSON}` MUST be the complete Universal Input JSON (see section 4 below) with ALL fields populated.
+`{FULL_INPUT_JSON}` MUST be the complete Universal Input JSON (see section 4 below) with all fields populated per the schema. Note: `session_changed_files` is conditionally required — mandatory for Reviewer dispatches, omit (or pass `[]`) for other agents.
 
 ---
 
@@ -36,7 +36,7 @@ Before EVERY `runSubagent` call, verify:
 - [ ] Prompt contains the full dispatch template above (not a shortened version)
 - [ ] `context_files` lists all required files for this agent (see section 3)
 - [ ] All `context_files` paths use the actual session name (not `<session>` placeholder)
-- [ ] `task.id` matches the task from `tasks.yaml`
+- [ ] `task.id` matches the task from `tasks.yaml` OR is `meta` (for cross-cutting dispatches like final review)
 - [ ] `project_type` is included
 - [ ] `repo_state` is included with current branch and CI status
 
@@ -54,7 +54,7 @@ If any item fails, fix the prompt before dispatching. Never send an incomplete d
 | **Researcher** | `spec.md`, `acceptance.json` (if available), `architecture.md` (if available) |
 | **Planner** | `spec.md`, `acceptance.json`, `architecture.md`, design-spec (if Designer involved), research report (if Researcher involved) |
 | **Coder** | `spec.md`, `tasks.yaml`, `architecture.md` (if exists), design-spec (**MANDATORY if Designer produced one**) |
-| **Reviewer** | `spec.md`, `tasks.yaml`, `architecture.md` (if exists), design-spec (if applicable) |
+| **Reviewer** | `spec.md`, `tasks.yaml`, `architecture.md` (if exists), design-spec (if applicable). Additionally: `session_changed_files` in task object (see full-scope rule below — NOT in `context_files`) |
 | **QA** | `spec.md`, `acceptance.json`, `tasks.yaml` |
 | **Security** | `tasks.yaml`, `architecture.md` (if exists) |
 | **Integrator** | `tasks.yaml`, `acceptance.json` |
@@ -62,12 +62,19 @@ If any item fails, fix the prompt before dispatching. Never send an incomplete d
 
 **Designer spec enforcement**: If Designer was involved for a task, the design-spec path MUST be included in `context_files` for **Coder**, **Reviewer**, and **QA**. Omitting it is a workflow violation.
 
-All paths must be fully qualified with the session prefix: `.agents-work/<session>/spec.md`, etc.
+**Reviewer full-scope rule (mandatory)**: When dispatching Reviewer, the `task` object MUST include a `session_changed_files` array listing every file modified in the session so far (by any agent — Coder, Integrator, Docs, etc.). Each entry is an object: `{ "path": "...", "change_type": "added|modified|deleted|renamed" }`. For `change_type: "renamed"`, `old_path` is **required** (not optional). These are repo-relative paths, separate from `context_files`. `context_files` remains for session artifacts only (spec, architecture, tasks, design-specs).
+
+- **Per-task review**: Reviewer focuses deep analysis on the current task's files but uses `session_changed_files` to selectively check cross-task interactions (callers, dependents, shared interfaces).
+- **Final review** (`task.id: "meta"`): Reviewer reads all non-deleted files from `session_changed_files` comprehensively. For deleted files, reviews diff for intentional removal and dangling references.
+
+If the Orchestrator cannot determine the full list, it MUST instruct the Reviewer to discover all changes independently (e.g., via `git diff` or `get_changed_files`).
+
+All `context_files` paths must be fully qualified with the session prefix: `.agents-work/<session>/spec.md`, etc. `session_changed_files` paths are repo-relative (no session prefix).
 
 ---
 
 ## 4. Universal Input JSON schema (compact)
-Every dispatch MUST include all these fields (canonical source: CONTRACT.md):
+Every dispatch MUST include all fields from the schema below (canonical source: CONTRACT.md). All fields are required except `session_changed_files`, which is **conditionally required**: mandatory for Reviewer dispatches, omit (or pass `[]`) for all other agents.
 
 ```json
 {
@@ -77,6 +84,11 @@ Every dispatch MUST include all these fields (canonical source: CONTRACT.md):
     "goal": "What to achieve",
     "non_goals": ["What not to do"],
     "context_files": [".agents-work/<session>/spec.md", "..."],
+    "session_changed_files": [
+      {"path": "src/app.js", "change_type": "modified"},
+      {"path": "src/old.js", "change_type": "deleted"},
+      {"path": "src/new.js", "old_path": "src/prev.js", "change_type": "renamed"}
+    ],
     "constraints": ["Hard constraints"],
     "acceptance_checks": ["cmd: ...", "manual: ..."],
     "risk_flags": ["security|perf|breaking-change|none"]

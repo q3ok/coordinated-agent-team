@@ -20,6 +20,11 @@ Each agent gets a structure:
     "goal": "What to achieve",
     "non_goals": ["What not to do"],
     "context_files": [".agents-work/<session>/spec.md", ".agents-work/<session>/architecture.md", ".agents-work/<session>/tasks.yaml", "..."],
+    "session_changed_files": [
+      {"path": "src/app.js", "change_type": "modified"},
+      {"path": "src/old.js", "change_type": "deleted"},
+      {"path": "src/new.js", "old_path": "src/prev.js", "change_type": "renamed"}
+    ],
     "constraints": ["Hard constraints"],
     "acceptance_checks": ["cmd: ...", "manual: ..."],
     "risk_flags": ["security|perf|breaking-change|none"]
@@ -33,6 +38,9 @@ Each agent gets a structure:
   "tools_available": ["read_file", "write_file", "apply_patch", "run_cmd", "search_repo"],
   "artifact_list": ["list of existing files optional"]
 }
+
+**Field notes**:
+- `session_changed_files` is **conditionally required**: mandatory for Reviewer dispatches, omit or pass `[]` for all other agents. Each entry has `path` (string), `change_type` (`added|modified|deleted|renamed`), and `old_path` (string, required when `change_type` is `"renamed"`).
 
 ## Universal Output JSON (all agents)
 Each agent returns ONLY:

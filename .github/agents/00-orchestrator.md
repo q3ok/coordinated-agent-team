@@ -103,6 +103,10 @@ During workflow execution, all dispatch plans and state transitions use JSON:
         "goal": "What to achieve",
         "non_goals": [],
         "context_files": [],
+        "session_changed_files": [
+          {"path": "src/app.js", "change_type": "modified"},
+          {"path": "src/old.js", "change_type": "deleted"}
+        ],
         "constraints": [],
         "acceptance_checks": [],
         "risk_flags": []
@@ -236,6 +240,13 @@ DONE only when:
 
 ## Context files enforcement (mandatory)
 When dispatching a task to any agent, the Orchestrator MUST populate `context_files` with ALL relevant artifacts from the session. This is not optional - agents depend on these files for correct execution.
+
+**Reviewer full-scope rule**: When dispatching Reviewer, the Orchestrator MUST include a `session_changed_files` array in the `task` object listing ALL files modified during the session by ANY agent (Coder, Integrator, Docs, etc.). Each entry is an object: `{ "path": "...", "change_type": "added|modified|deleted|renamed", "old_path": "...(renamed only)" }`. These are repo-relative paths, separate from `context_files` (which remains for session artifacts only). The Orchestrator MUST maintain a cumulative list of changed files (with their change types) across all dispatches.
+
+- **Per-task review**: `session_changed_files` provides awareness; Reviewer focuses deep read on current task's files and selectively checks cross-task interactions.
+- **Final review** (`task.id: "meta"`): Reviewer reads all non-deleted files from `session_changed_files` comprehensively. For deleted files, reviews diff for intentional removal and dangling references.
+
+If tracking is impractical, the Orchestrator MUST instruct the Reviewer to discover all changes independently via git. This rule applies to both per-task reviews and the mandatory cross-task final review before INTEGRATE.
 
 **Full context_files table, designer spec enforcement rules, and path formatting requirements** → see `.github/agents/DISPATCH-REFERENCE.md` section 3.
 

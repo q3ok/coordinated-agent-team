@@ -9,7 +9,7 @@ Coordinated Agent Team is a framework for autonomous software delivery with a mu
 - `.github/agents/DISPATCH-REFERENCE.md`: mandatory dispatch template, context_files matrix, and pre-dispatch validation checklist used by Orchestrator.
 - `.github/agents/00-orchestrator.md` to `.github/agents/11-researcher.md`: role-specific instructions for each agent.
 - `.agents-work/<session>/...`: runtime artifacts generated per session.
-- `demo-greeting`, `demo-pomidoro`, and `demo-traffic-simulator`: example projects used with this workflow.
+- `demo-click-message`, `demo-greeting`, `demo-pomidoro`, and `demo-traffic-simulator`: example projects used with this workflow.
 
 ## Why Multi-Agent Delivery
 
@@ -46,11 +46,54 @@ Additional states:
 - `FIX_BUILD`
 - `BLOCKED`
 
+Workflow map (full mode, including repair loops and user decision path):
+
+```mermaid
+graph TD
+    User([User Request]) --> Orchestrator
+
+    Orchestrator --> SpecAgent
+    SpecAgent --> Orchestrator
+
+    Orchestrator -->|if needed| Researcher
+    Researcher --> Orchestrator
+    Orchestrator --> Architect
+    Architect --> Orchestrator
+    Orchestrator -->|if UI/UX needed| Designer
+    Designer --> Orchestrator
+    Orchestrator --> Planner
+    Planner --> Orchestrator
+
+    Orchestrator --> Coder
+    Coder --> Reviewer
+    Reviewer -->|OK| QA
+    Reviewer -->|BLOCKED| Orchestrator
+    QA -->|OK or skipped| Security
+    QA -->|BLOCKED| Orchestrator
+    Security -->|OK or skipped| Orchestrator
+    Security -->|NEEDS_DECISION| AskUser[ASK_USER]
+    AskUser -->|answer persisted in status.json| Orchestrator
+    Security -->|BLOCKED| Orchestrator
+
+    Orchestrator -->|FIX_REVIEW / FIX_TESTS / FIX_SECURITY| Coder
+
+    Orchestrator -->|all tasks completed| FinalReview[Reviewer: task.id=meta]
+    FinalReview -->|OK| Integrator
+    FinalReview -->|BLOCKED| Orchestrator
+
+    Integrator --> Docs
+    Docs --> IntegratorRelease[Integrator release checks]
+    IntegratorRelease --> FinalResponse([Final Response + report.md])
+```
+
+Important full-mode rule:
+- After all implementation tasks are `completed`, Orchestrator runs a mandatory cross-task final review (`Reviewer` with `task.id: meta`) before `INTEGRATE`.
+
 ### Lean Mode Notes
 
 - `SpecAgent` bootstraps minimal artifacts (`spec.md`, `acceptance.json`, `tasks.yaml`, `status.json`).
 - `architecture.md` is skipped.
-- `Integrator` is not dispatched; Orchestrator runs integration checks directly.
+- `Integrator` and `Docs` are not dispatched; Orchestrator runs integration checks and creates `report.md` directly.
 - If complexity expands, workflow exits lean mode and restarts from full intake.
 
 ## Agent Roster
@@ -111,6 +154,8 @@ Workflow cannot progress when any hard gate fails:
 - Reviewer returns `BLOCKED`
 - QA returns `BLOCKED`
 - Security returns `BLOCKED` for high/critical issues
+- cross-task final review (`task.id: meta`) returns `BLOCKED`
+- Security returns `NEEDS_DECISION` until Orchestrator resolves it through `ASK_USER`
 - build/CI is red in integration or release
 
 Repair loops have a retry budget of 3 attempts per task and loop type. After budget exhaustion, Orchestrator enters `ASK_USER`.
@@ -129,14 +174,55 @@ Global status enum:
 
 ## Using This Framework
 
-1. Start with the Orchestrator agent.
-2. Provide: goal, constraints, and `project_type` (`web|api|cli|lib|mixed`).
-3. Let the Orchestrator create/reuse a session in `.agents-work/`.
+### 1. Copy the agent pack into your project
+
+Copy `.github/agents/`:
+
+```bash
+# from your project root
+cp -r path/to/coordinated-agent-team/.github/agents .github/agents
+```
+
+```powershell
+# from your project root
+Copy-Item -Path path\to\coordinated-agent-team\.github\agents -Destination .github\agents -Recurse
+```
+
+Add runtime artifacts directory to `.gitignore`:
+
+```gitignore
+# Agent runtime artifacts
+.agents-work/
+```
+
+### 2. (Alternative) Download only `.github/agents` from this repo
+
+Use sparse checkout to fetch just the needed folder:
+
+```bash
+git clone --filter=blob:none --no-checkout <REPO_URL> coordinated-agent-team
+cd coordinated-agent-team
+git sparse-checkout init --cone
+git sparse-checkout set .github/agents
+git checkout main
+```
+
+Then copy the files into your target project.
+
+### 3. Start in VS Code
+
+1. Open your target project in VS Code with GitHub Copilot Chat enabled.
+2. Start with Orchestrator:
+   - `@orchestrator Build X with constraints Y`
+3. Provide at minimum:
+   - goal
+   - constraints
+   - `project_type` (`web|api|cli|lib|mixed`)
 4. Track progress in:
    - `.agents-work/<session>/tasks.yaml`
    - `.agents-work/<session>/status.json`
-5. Respond only when `ASK_USER` is raised.
-6. Review final `report.md` and acceptance checks at `DONE`.
+5. Respond when Orchestrator enters `ASK_USER`.
+6. At the end, review `.agents-work/<session>/report.md`.
 
 ## Repository Layout
 
@@ -159,6 +245,7 @@ Global status enum:
     CONTRACT.md
     WORKFLOW.md
 .agents-work/
+demo-click-message/
 demo-greeting/
 demo-pomidoro/
 demo-traffic-simulator/
@@ -168,6 +255,7 @@ README.md
 ## Demo Projects
 
 - `demo-greeting`: lightweight greeting card demo.
+- `demo-click-message`: minimal click-to-message static demo.
 - `demo-pomidoro`: Pomodoro timer app with distraction journal.
 - `demo-traffic-simulator`: minimal traffic simulation on Canvas.
 
@@ -180,4 +268,3 @@ When updating this system:
 3. Update `WORKFLOW.md` and role files together to avoid drift.
 4. Re-check lean/full mode consistency after every rule change.
 5. Preserve canonical agent names used in dispatch and `recommended_agent`.
-
