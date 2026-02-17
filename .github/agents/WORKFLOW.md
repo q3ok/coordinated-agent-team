@@ -17,18 +17,18 @@ Gate: all three files exist, spec.md has testable ACs, status.json has valid sch
 
 ### INTAKE_LEAN (lean mode only)
 Orchestrator delegates initial artifact creation to SpecAgent (with lean flag).
-SpecAgent is used here as a utility for artifact bootstrapping — it is not a mandatory dispatch in the lean mode agent list.
+SpecAgent is used here as a utility for artifact bootstrapping - it is not a mandatory dispatch in the lean mode agent list.
 - Short `.agents-work/<session>/spec.md` (goal + AC only)
 - `.agents-work/<session>/acceptance.json`
 - Single-task `.agents-work/<session>/tasks.yaml`
 - `.agents-work/<session>/status.json` (initial creation)
-- No `architecture.md` — lean mode skips the DESIGN phase entirely
+- No `architecture.md` - lean mode skips the DESIGN phase entirely
 
-Note: Orchestrator does not create files directly — it delegates via dispatch. Exception: if SpecAgent is unavailable in lean mode, Orchestrator MAY create minimal artifacts directly as the sole exception to the no-edit rule.
+Note: Orchestrator does not create files directly - it delegates via dispatch. Exception: if SpecAgent is unavailable in lean mode, Orchestrator MAY create minimal artifacts directly as the sole exception to the no-edit rule.
 Gate: artifacts exist. If Coder discovers complexity, exit lean mode and restart from full INTAKE.
 
 ### DESIGN
-Agents: Researcher (if research needed — see Orchestrator's Researcher trigger policy), then Architect, then Designer (if task involves UI/UX)
+Agents: Researcher (if research needed - see Orchestrator's Researcher trigger policy), then Architect, then Designer (if task involves UI/UX)
 Produces: `.agents-work/<session>/research/` (if Researcher involved), `.agents-work/<session>/architecture.md`, `.agents-work/<session>/adr/ADR-001.md` (if needed), `.agents-work/<session>/design-specs/` (if Designer involved)
 Gate: architecture consistent with spec, risks recorded. If research was requested, research report exists. If UI involved, design spec exists.
 
@@ -52,13 +52,15 @@ Gate per task:
 ### ASK_USER
 Trigger: Orchestrator enters this state when human judgment is needed.
 Mechanism: Orchestrator uses `ask_questions` tool (NEVER plain text that ends the turn).
-Resume: after receiving the user's answer, Orchestrator records it in `.agents-work/<session>/status.json` under `user_decisions` and returns to the state that triggered ASK_USER.
+Protocol: follow the canonical ASK_USER protocol in `CONTRACT.md` (single source of truth for schema, persistence, retries, and resume behavior).
+Resume: only after CONTRACT validation passes, then return to the state that triggered ASK_USER.
+If persistence cannot be completed after retries, transition to `BLOCKED`.
 Examples:
 - Ambiguous requirements with multiple valid interpretations
 - Reviewer PASS WITH NOTES (user decides which notes to fix)
 - Design trade-offs with no clear winner
 - Scope creep risk (confirm before expanding)
-- Security medium findings — deterministic trigger: Security agent returns `status: NEEDS_DECISION`, Orchestrator MUST enter ASK_USER (see Security agent spec)
+- Deterministic security trigger: Security agent returns `NEEDS_DECISION` (medium findings) -> Orchestrator MUST enter ASK_USER (see Orchestrator ASK_USER trigger policy for details)
 
 ### INTEGRATE
 Agent: Integrator (full mode) or Orchestrator directly (lean mode)
@@ -98,12 +100,13 @@ Optional (used when applicable):
 - ASK_USER (when human judgment is needed)
 Exception: Security can be "OK no findings," but must be run.
 
-**Lean mode exception**: In lean mode, only Coder, Reviewer, and (conditionally) QA and Security are mandatory. SpecAgent is used for INTAKE_LEAN artifact creation (delegated by Orchestrator) but is not counted as a "mandatory core agent" for dispatch tracking. Architect, Planner, Designer, Integrator, Docs, and Researcher are skipped in lean mode. Orchestrator handles INTEGRATE checks directly.
+**Lean mode exception**: In lean mode, only Coder, Reviewer, and (conditionally) QA and Security are mandatory. SpecAgent is used for INTAKE_LEAN artifact creation (delegated by Orchestrator) but is not counted as a "mandatory core agent" for dispatch tracking. Architect, Planner, Designer, Integrator, Docs, and Researcher are skipped in lean mode. Orchestrator handles INTEGRATE checks directly and creates `report.md` directly (since Docs is skipped).
 
 ## Definition of Done (global)
 DONE only if:
 - All criteria from `.agents-work/<session>/acceptance.json` are met
 - `.agents-work/<session>/status.json` is up-to-date and current_state=DONE
+- `.agents-work/<session>/status.json` has no unresolved `user_decisions` with `status: pending`
 - `.agents-work/<session>/report.md` contains: what was done, how to run, how to test, known issues
 
 ## Context files enforcement

@@ -28,6 +28,8 @@ Must include:
 - context_files (`.agents-work/<session>/spec.md`, `.agents-work/<session>/architecture.md` if exists (not in lean mode), relevant source files, design-spec if applicable)
 - tools_available including apply_patch/run_cmd if possible
 
+**Self-sufficiency rule**: If the Orchestrator's dispatch does not include `context_files` or the full input JSON, you MUST still read the session's `tasks.yaml` and `status.json` yourself before starting work. Look for `.agents-work/` folders in the repo root to find the current session. If you cannot determine the session path, return `status: BLOCKED` with `"missing session context in dispatch"`.
+
 ## Output (JSON)
 {
   "status": "OK|BLOCKED|FAIL",
@@ -52,6 +54,7 @@ Must include:
 }
 
 ## Implementation checklist
+- [ ] Task status in `tasks.yaml` set to `in-progress` at start of work
 - [ ] Only task scope implemented
 - [ ] Edge cases handled (from `.agents-work/<session>/spec.md`)
 - [ ] Errors handled deterministically

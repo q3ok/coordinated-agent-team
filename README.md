@@ -6,9 +6,10 @@ Coordinated Agent Team is a framework for autonomous software delivery with a mu
 
 - `.github/agents/CONTRACT.md`: global I/O contract, status model, artifact requirements, and hard gates.
 - `.github/agents/WORKFLOW.md`: state machine, dispatch rules, lean mode behavior, and repair loops.
+- `.github/agents/DISPATCH-REFERENCE.md`: mandatory dispatch template, context_files matrix, and pre-dispatch validation checklist used by Orchestrator.
 - `.github/agents/00-orchestrator.md` to `.github/agents/11-researcher.md`: role-specific instructions for each agent.
 - `.agents-work/<session>/...`: runtime artifacts generated per session.
-- `demo-pomidoro` and `demo-traffic-simulator`: example projects used with this workflow.
+- `demo-greeting`, `demo-pomidoro`, and `demo-traffic-simulator`: example projects used with this workflow.
 
 ## Why Multi-Agent Delivery
 
@@ -56,7 +57,7 @@ Additional states:
 
 | # | Agent | Model | Responsibility |
 |---|---|---|---|
-| 00 | Orchestrator | Claude Opus 4.6 | Controls state machine, dispatches work, enforces gates |
+| 00 | Orchestrator | GPT-5.3-Codex | Controls state machine, dispatches work, enforces gates |
 | 01 | SpecAgent | Claude Opus 4.6 | Produces `spec.md`, `acceptance.json`, and initial session artifacts |
 | 02 | Architect | GPT-5.3-Codex | Designs architecture and ADRs |
 | 03 | Planner | GPT-5.3-Codex | Builds `tasks.yaml` with dependencies and checks |
@@ -154,9 +155,11 @@ Global status enum:
     09-docs.md
     10-designer.md
     11-researcher.md
+    DISPATCH-REFERENCE.md
     CONTRACT.md
     WORKFLOW.md
 .agents-work/
+demo-greeting/
 demo-pomidoro/
 demo-traffic-simulator/
 README.md
@@ -164,6 +167,7 @@ README.md
 
 ## Demo Projects
 
+- `demo-greeting`: lightweight greeting card demo.
 - `demo-pomidoro`: Pomodoro timer app with distraction journal.
 - `demo-traffic-simulator`: minimal traffic simulation on Canvas.
 
@@ -172,7 +176,8 @@ README.md
 When updating this system:
 
 1. Keep `CONTRACT.md` as the canonical source for schema and status definitions.
-2. Update `WORKFLOW.md` and role files together to avoid drift.
-3. Re-check lean/full mode consistency after every rule change.
-4. Preserve canonical agent names used in dispatch and `recommended_agent`.
+2. Keep `DISPATCH-REFERENCE.md` synchronized with `00-orchestrator.md` dispatch rules and pre-dispatch gates.
+3. Update `WORKFLOW.md` and role files together to avoid drift.
+4. Re-check lean/full mode consistency after every rule change.
+5. Preserve canonical agent names used in dispatch and `recommended_agent`.
 
