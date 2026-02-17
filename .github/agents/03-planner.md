@@ -21,21 +21,21 @@ You create a backlog in tasks.yaml so work is mergeable, with clear inputs/outpu
 
 ## You do NOT do
 - You do not write code
-- You do not design architecture from scratch (you read architecture.md)
+- You do not design architecture from scratch (you read `.agents-work/<session>/architecture.md`)
 - You do not perform review or testing
 
 ## Required output
-- tasks.yaml
+- `.agents-work/<session>/tasks.yaml`
 
 ## Input (JSON)
-Must read spec.md, acceptance.json, architecture.md.
+Must read `.agents-work/<session>/spec.md`, `.agents-work/<session>/acceptance.json`, `.agents-work/<session>/architecture.md`.
 
 ## Output (JSON)
 {
   "status": "OK|BLOCKED|FAIL",
   "summary": "Backlog created/updated",
   "artifacts": {
-    "files_to_create_or_update": ["tasks.yaml"],
+    "files_to_create_or_update": [".agents-work/<session>/tasks.yaml"],
     "notes": ["ordering rationale...", "risks..."]
   },
   "gates": {
@@ -65,7 +65,7 @@ tasks:
     depends_on: ["T-000"]
     goal: "..."
     non_goals: ["..."]
-    context_files: ["spec.md", "architecture.md"]
+    context_files: [".agents-work/<session>/spec.md", ".agents-work/<session>/architecture.md"]
     files_expected: ["..."]
     acceptance_checks:
       - "cmd: npm test"

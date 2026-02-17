@@ -17,7 +17,7 @@ Each agent gets a structure:
     "title": "Short title",
     "goal": "What to achieve",
     "non_goals": ["What not to do"],
-    "context_files": ["spec.md", "architecture.md", "tasks.yaml", "..."],
+    "context_files": [".agents-work/<session>/spec.md", ".agents-work/<session>/architecture.md", ".agents-work/<session>/tasks.yaml", "..."],
     "constraints": ["Hard constraints"],
     "acceptance_checks": ["cmd: ...", "manual: ..."],
     "risk_flags": ["security|perf|breaking-change|none"]
@@ -61,23 +61,38 @@ Each agent returns ONLY:
 }
 
 ## Required repository artifacts (global)
-These files are expected in every agent-driven project:
-- spec.md
-- acceptance.json
-- architecture.md
-- adr/ (optional)
-- tasks.yaml
-- status.json
-- report.md (at the end)
+All agent artifacts are stored in session subfolders under `.agents-work/` at the repo root.
+Each session has the format: `.agents-work/YYYY-MM-DD_<short-slug>/`
+
+Session contents:
+- `.agents-work/<session>/spec.md`
+- `.agents-work/<session>/acceptance.json`
+- `.agents-work/<session>/architecture.md`
+- `.agents-work/<session>/adr/` (optional)
+- `.agents-work/<session>/tasks.yaml`
+- `.agents-work/<session>/status.json`
+- `.agents-work/<session>/report.md` (at the end)
+- `.agents-work/<session>/design-specs/` (Designer output, when applicable)
+
+This centralized location allows users to inspect, review, and track agent progress across sessions.
+Previous sessions are read-only — agents may reference them but MUST NOT modify them.
+
+## Context files enforcement (mandatory)
+The Orchestrator MUST populate `context_files` fully when dispatching tasks. Agents MUST read ALL files listed in `context_files` before starting work. If a `context_files` entry references a design-spec, the agent MUST read and follow it.
+
+If a required context file is missing, the agent MUST return `status: BLOCKED` with the missing file path.
 
 ## status.json - minimal schema
-status.json MUST exist and be updated by agents who change the state of work:
+`.agents-work/<session>/status.json` MUST exist and be updated by agents who change the state of work:
 
 {
-  "current_state": "INTAKE|DESIGN|PLAN|IMPLEMENT_LOOP|INTEGRATE|RELEASE|DONE|BLOCKED",
+  "current_state": "INTAKE|DESIGN|PLAN|IMPLEMENT_LOOP|INTEGRATE|RELEASE|DONE|ASK_USER|BLOCKED",
+  "session": "YYYY-MM-DD_short-slug",
   "completed_tasks": ["T-001"],
   "blocked_tasks": [{"id":"T-002","reason":"..."}],
   "assumptions": ["..."],
+  "user_decisions": [{"question":"...","answer":"...","timestamp":"ISO-8601","state_context":"which state triggered ASK_USER"}],
+  "retry_counts": {"T-001": {"FIX_REVIEW": 0, "FIX_TESTS": 0, "FIX_SECURITY": 0, "FIX_BUILD": 0}},
   "known_issues": ["..."],
   "last_ci_result": "unknown|green|red",
   "last_update": "ISO-8601 timestamp"

@@ -22,7 +22,7 @@ You quickly identify security risks and provide concrete fixes. Priority: input 
 ## Input
 - change diff
 - task.risk_flags
-- architecture.md (data flows)
+- `.agents-work/<session>/architecture.md` (data flows)
 
 ## Output (JSON)
 {

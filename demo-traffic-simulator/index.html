@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traffic Simulator Demo</title>
+    <link rel="stylesheet" href="./public/styles.css" />
+  </head>
+  <body>
+    <main class="layout" aria-label="Traffic Simulator">
+      <section class="panel simulation-panel" aria-labelledby="simulation-heading">
+        <h1 id="simulation-heading">Symulacja ruchu</h1>
+        <canvas
+          id="sim-canvas"
+          width="1280"
+          height="720"
+          role="img"
+          aria-label="Obszar symulacji ruchu"
+        ></canvas>
+        <p id="simulation-status" class="status" aria-live="polite">Stan: Działa</p>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel" aria-labelledby="controls-heading">
+          <h2 id="controls-heading">Sterowanie</h2>
+
+          <div class="control-row">
+            <label for="spawn-rate">Natężenie ruchu</label>
+            <input id="spawn-rate" type="range" min="10" max="120" step="5" value="60" />
+            <output id="spawn-rate-value" for="spawn-rate">60 poj./min</output>
+          </div>
+
+          <div class="control-row">
+            <label for="speed-multiplier">Mnożnik prędkości</label>
+            <input id="speed-multiplier" type="range" min="0.5" max="2" step="0.1" value="1" />
+            <output id="speed-multiplier-value" for="speed-multiplier">1.0x</output>
+          </div>
+
+          <div class="control-row">
+            <label for="signal-mode">Tryb sygnalizacji</label>
+            <select id="signal-mode">
+              <option value="auto">Automatyczny</option>
+              <option value="blink">Migający</option>
+              <option value="off">Wyłączony</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <label for="lane-density">Gęstość pasa</label>
+            <input id="lane-density" type="range" min="0.2" max="1" step="0.1" value="0.6" />
+            <output id="lane-density-value" for="lane-density">0.6</output>
+          </div>
+
+          <div class="button-row">
+            <button id="pause-resume" type="button">Pauza</button>
+            <button id="reset" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="metrics-heading">
+          <h2 id="metrics-heading">Statystyki</h2>
+          <ul class="metrics-list" aria-live="polite">
+            <li><span>Aktywne pojazdy</span><strong id="metric-active">0</strong></li>
+            <li><span>Średnia prędkość</span><strong id="metric-speed">0.0</strong></li>
+            <li><span>Przepustowość (poj./min)</span><strong id="metric-throughput">0.0</strong></li>
+            <li><span>Zatrzymane pojazdy</span><strong id="metric-stopped">0</strong></li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+
+    <script type="module" src="./public/app.js"></script>
+  </body>
+</html>

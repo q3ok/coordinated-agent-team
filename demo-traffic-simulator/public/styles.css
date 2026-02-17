@@ -1,0 +1,143 @@
+:root {
+  --bg: #0b1220;
+  --panel: #141f33;
+  --panel-border: #243655;
+  --text: #e8eefc;
+  --muted: #9fb1d6;
+  --accent: #54b2ff;
+  --good: #53d28c;
+  --warn: #ffcc66;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+  gap: 16px;
+  padding: 16px;
+  min-height: 720px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.simulation-panel h1,
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+#sim-canvas {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1b283d;
+  border-radius: 8px;
+  border: 1px solid #30466e;
+}
+
+.status {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.side-column {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+.control-row {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.control-row label {
+  font-weight: 600;
+}
+
+input[type='range'],
+select,
+button {
+  width: 100%;
+}
+
+select,
+button {
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid #3a5483;
+  background: #102035;
+  color: var(--text);
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+output {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
+
+.metrics-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.metrics-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #29446e;
+  border-radius: 8px;
+}
+
+.metrics-list span {
+  color: var(--muted);
+}
+
+.metrics-list strong {
+  color: var(--good);
+}
+
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
