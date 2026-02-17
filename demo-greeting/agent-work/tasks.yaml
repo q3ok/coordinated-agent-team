@@ -1,0 +1,100 @@
+project:
+  name: "Greeting Card Generator"
+  definition_of_done:
+    - "All 3 files (index.html, app.js, styles.css) exist in demo-greeting/"
+    - "Opening index.html in a browser shows name input, 3 color options, Generate button"
+    - "Typing a name, selecting a color, clicking Generate displays styled card with 'Hello, {name}!'"
+    - "Re-generating with different inputs updates card in place"
+    - "Empty/whitespace name handled gracefully with validation message"
+    - "Special characters rendered safely (no XSS)"
+    - "No external dependencies, no build step, no server required"
+    - "All AC in acceptance.json pass"
+
+tasks:
+  - id: T-001
+    status: completed
+    type: feat
+    title: "Create HTML structure and CSS styling"
+    depends_on: []
+    goal: >
+      Create index.html and styles.css for the Greeting Card Generator.
+      HTML must include semantic structure with name input, 3 color radio swatches,
+      Generate button, error message area, and card output section — all with proper
+      accessibility attributes (aria-labelledby, aria-live, role=alert, labels, fieldset/legend).
+      CSS must include all design tokens, layout, form card, color swatches, button,
+      error message, greeting card, sr-only class, and focus-visible styles per design spec.
+    non_goals:
+      - "No JavaScript logic — only static markup and styles"
+      - "No animations or transitions"
+    context_files:
+      - ".agents-work/2026-02-17_demo-greeting/spec.md"
+      - ".agents-work/2026-02-17_demo-greeting/architecture.md"
+      - ".agents-work/2026-02-17_demo-greeting/design-specs/design-spec-greeting-card.md"
+      - ".agents-work/2026-02-17_demo-greeting/research/research-existing-patterns.md"
+    files_expected:
+      - "demo-greeting/index.html"
+      - "demo-greeting/styles.css"
+    acceptance_checks:
+      - "manual: Open index.html in browser — name input, 3 color swatches, and Generate button are visible"
+      - "manual: Page uses Polish UI labels (Twoje imię, Wybierz kolor, Generuj)"
+      - "manual: html lang='pl', semantic elements (main, section, fieldset/legend), aria attributes present"
+      - "manual: Color swatches are circular (48px), first radio pre-selected"
+      - "manual: Layout is centered with max-width 520px, light theme background #f4f5f7"
+      - "manual: Tab order is correct — input → radios → button"
+      - "manual: Focus-visible outlines appear on keyboard navigation"
+    risk_flags: []
+    done_when:
+      - "index.html and styles.css created in demo-greeting/"
+      - "HTML follows architecture.md DOM structure and design-spec markup"
+      - "CSS implements all design tokens from design-spec §2"
+      - "All component styles match design-spec §4 (form card, input, swatches, button, error, greeting card)"
+      - "Accessibility: labels, fieldset/legend, aria-labelledby, aria-live, sr-only class"
+      - "noscript message included"
+      - "Meets AC-001, AC-008"
+
+  - id: T-002
+    status: completed
+    type: feat
+    title: "Implement greeting card JavaScript logic"
+    depends_on: ["T-001"]
+    goal: >
+      Create app.js as an ES Module implementing the full greeting card logic:
+      COLOR_PRESETS constant (with value, label, textColor per design spec),
+      validateName() pure function, greetingText() pure function, and initApp()
+      for DOM binding and event handling. On Generate click: validate name (trim,
+      empty check), show/hide error message, read selected color, render card with
+      textContent and backgroundColor, set correct text color per preset. Handle
+      all edge cases: empty name, whitespace, XSS via textContent, re-generation
+      in place, rapid clicks.
+    non_goals:
+      - "No localStorage or persistence"
+      - "No external dependencies or frameworks"
+      - "No innerHTML — use textContent only"
+    context_files:
+      - ".agents-work/2026-02-17_demo-greeting/spec.md"
+      - ".agents-work/2026-02-17_demo-greeting/architecture.md"
+      - ".agents-work/2026-02-17_demo-greeting/design-specs/design-spec-greeting-card.md"
+      - ".agents-work/2026-02-17_demo-greeting/acceptance.json"
+    files_expected:
+      - "demo-greeting/app.js"
+    acceptance_checks:
+      - "manual: Type 'Alice', select a color, click Generate — card appears with 'Hello, Alice!'"
+      - "manual: Card text is 'Hello, Bob!' when 'Bob' is entered"
+      - "manual: Card background matches selected color (Coral, Sky Blue, Sunshine)"
+      - "manual: Text color is white on Coral, dark on Sky Blue and Sunshine"
+      - "manual: Change name/color, click Generate again — card updates in place, no duplicates"
+      - "manual: Leave name empty, click Generate — validation message appears, no card"
+      - "manual: Enter only spaces — same as empty name"
+      - "manual: Enter '<script>alert(1)</script>' — rendered as plain text, no execution"
+      - "manual: Open via file:// protocol — works without server"
+    risk_flags: []
+    done_when:
+      - "app.js created in demo-greeting/ as ES Module"
+      - "Exports: COLOR_PRESETS, validateName, greetingText, initApp"
+      - "validateName handles empty, whitespace, valid input"
+      - "greetingText returns 'Hello, {name}!' format"
+      - "initApp binds Generate button, performs validation, renders card"
+      - "textContent used exclusively (no innerHTML) — XSS safe"
+      - "Card text color set per COLOR_PRESETS textColor property"
+      - "text-shadow applied on Coral for readability"
+      - "Meets AC-001 through AC-008"

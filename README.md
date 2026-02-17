@@ -1,123 +1,178 @@
-# Coordinated Agent Team
+﻿# Coordinated Agent Team
 
-A framework for **autonomous software delivery** by a coordinated team of AI agents, driven by a state machine.
+Coordinated Agent Team is a framework for autonomous software delivery with a multi-agent system. It defines clear agent roles, a deterministic workflow, strict I/O contracts, and artifact-based coordination.
 
-## Concept
+## What This Repository Contains
 
-Instead of a single monolithic AI agent, projects are delivered by a **team of 12 specialized agents**, each fulfilling a distinct role — from requirements gathering, through architecture, planning, implementation, code review, testing, security audit, all the way to documentation and release. The entire workflow is managed by an **Orchestrator** that never writes code itself — it only delegates tasks and enforces quality gates.
+- `.github/agents/CONTRACT.md`: global I/O contract, status model, artifact requirements, and hard gates.
+- `.github/agents/WORKFLOW.md`: state machine, dispatch rules, lean mode behavior, and repair loops.
+- `.github/agents/00-orchestrator.md` to `.github/agents/11-researcher.md`: role-specific instructions for each agent.
+- `.agents-work/<session>/...`: runtime artifacts generated per session.
+- `demo-pomidoro` and `demo-traffic-simulator`: example projects used with this workflow.
 
-## Architecture
+## Why Multi-Agent Delivery
 
-### State machine (workflow)
+A single general agent can deliver quickly, but quality can drift when responsibilities are mixed. This project separates concerns into specialized roles so each stage has explicit ownership and gates:
 
+- specification and acceptance criteria
+- architecture and planning
+- implementation
+- review, QA, and security
+- integration and documentation
+
+The orchestrator coordinates the process end-to-end and enforces progression rules.
+
+## Workflow
+
+Full workflow:
+
+```text
+INTAKE -> DESIGN -> PLAN -> IMPLEMENT_LOOP -> INTEGRATE -> RELEASE -> DONE
 ```
-INTAKE → DESIGN → PLAN → IMPLEMENT_LOOP → INTEGRATE → RELEASE → DONE
+
+Lean workflow (for trivial, low-risk tasks):
+
+```text
+INTAKE_LEAN -> IMPLEMENT_LOOP -> INTEGRATE -> DONE
 ```
 
-Simplified mode for trivial changes:
+Additional states:
+
+- `ASK_USER`
+- `FIX_REVIEW`
+- `FIX_TESTS`
+- `FIX_SECURITY`
+- `FIX_BUILD`
+- `BLOCKED`
+
+### Lean Mode Notes
+
+- `SpecAgent` bootstraps minimal artifacts (`spec.md`, `acceptance.json`, `tasks.yaml`, `status.json`).
+- `architecture.md` is skipped.
+- `Integrator` is not dispatched; Orchestrator runs integration checks directly.
+- If complexity expands, workflow exits lean mode and restarts from full intake.
+
+## Agent Roster
+
+| # | Agent | Model | Responsibility |
+|---|---|---|---|
+| 00 | Orchestrator | Claude Opus 4.6 | Controls state machine, dispatches work, enforces gates |
+| 01 | SpecAgent | Claude Opus 4.6 | Produces `spec.md`, `acceptance.json`, and initial session artifacts |
+| 02 | Architect | GPT-5.3-Codex | Designs architecture and ADRs |
+| 03 | Planner | GPT-5.3-Codex | Builds `tasks.yaml` with dependencies and checks |
+| 04 | Coder | Claude Opus 4.6 | Implements scoped tasks and updates task state to `implemented` |
+| 05 | Reviewer | GPT-5.3-Codex | Structured code review and risk analysis |
+| 06 | QA | Gemini 3 Pro (Preview) | Test planning, test execution, acceptance validation |
+| 07 | Security | GPT-5.3-Codex | Security assessment and decision-trigger findings |
+| 08 | Integrator | GPT-5.3-Codex | Build/CI integration and release readiness |
+| 09 | Docs | Claude Haiku 4.5 | README/report updates and delivery documentation |
+| 10 | Designer | Gemini 3 Pro (Preview) | UI/UX design specs |
+| 11 | Researcher | Claude Opus 4.6 | Evidence-based technical research |
+
+## Contract and Artifact Model
+
+All session artifacts live under:
+
+```text
+.agents-work/YYYY-MM-DD_<short-slug>/
 ```
-INTAKE_LEAN → IMPLEMENT_LOOP → INTEGRATE → DONE
-```
 
-Additional repair states: `FIX_REVIEW`, `FIX_TESTS`, `FIX_SECURITY`, `FIX_BUILD`, `ASK_USER`, `BLOCKED`.
+Core artifacts:
 
-### Agents
+- `spec.md`
+- `acceptance.json`
+- `tasks.yaml`
+- `status.json`
+- `report.md`
 
-| #  | Agent          | Model            | Role                                                         |
-|----|----------------|------------------|--------------------------------------------------------------|
-| 00 | **Orchestrator** | Claude Opus 4.6  | Controls workflow, delegates tasks, never writes code       |
-| 01 | **SpecAgent**    | Claude Opus 4.6  | Creates specifications (`spec.md`, `acceptance.json`)       |
-| 02 | **Architect**    | GPT-5.3-Codex    | Designs architecture, creates ADRs                          |
-| 03 | **Planner**      | GPT-5.3-Codex    | Creates task backlog (`tasks.yaml`)                         |
-| 04 | **Coder**        | Claude Opus 4.6  | Implements tasks                                            |
-| 05 | **Reviewer**     | GPT-5.3-Codex    | Code review with checklist + devil's advocate               |
-| 06 | **QA**           | Gemini 3 Pro     | Tests, acceptance criteria validation                       |
-| 07 | **Security**     | GPT-5.3-Codex    | Security audit (XSS, CSRF, SSRF, auth, secrets)            |
-| 08 | **Integrator**   | GPT-5.3-Codex    | Integration, green build, release                           |
-| 09 | **Docs**         | Claude Haiku 4.5 | Documentation, README, final report                         |
-| 10 | **Designer**     | Gemini 3 Pro     | UX/UI design specs (invoked conditionally)                  |
-| 11 | **Researcher**   | Claude Opus 4.6  | Technology research, pattern analysis, codebase investigation (conditionally) |
+Conditional artifacts:
 
-### Communication via artifacts
+- `architecture.md` (full mode)
+- `adr/` (optional)
+- `design-specs/` (if Designer used)
+- `research/` (if Researcher used)
 
-Agents do not communicate through chat — **the source of truth is the files in the repository**:
+Task status lifecycle in `tasks.yaml`:
 
-| Artifact             | Format   | Description                                |
-|----------------------|----------|--------------------------------------------|
-| `spec.md`            | Markdown | Requirements specification (PRD)           |
-| `acceptance.json`    | JSON     | Acceptance criteria                        |
-| `architecture.md`    | Markdown | System architecture                        |
-| `tasks.yaml`         | YAML     | Task backlog with dependencies and status  |
-| `status.json`        | JSON     | Session state, retries, user decisions     |
-| `report.md`          | Markdown | Final report                               |
-| `adr/ADR-XXX.md`     | Markdown | Architecture Decision Records              |
-| `design-specs/`      | Markdown | UX/UI specifications from Designer         |
-| `research/`          | Markdown | Research reports from Researcher           |
+- `not-started`
+- `in-progress`
+- `implemented`
+- `completed`
+- `blocked`
 
-Each session's artifacts are stored in `.agents-work/YYYY-MM-DD_<slug>/`.
+`status.json` tracks session-level state only (`current_state`, retries, decisions, assumptions, known issues).
 
-### Quality gates
+## Quality Gates
 
-The workflow does not progress if:
-- Required artifacts are missing (`spec.md`, `acceptance.json`, `tasks.yaml`)
-- **Reviewer** blocks (BLOCKED)
-- **QA** blocks (BLOCKED)
-- **Security** blocks (high severity)
-- CI/build is red
+Workflow cannot progress when any hard gate fails:
 
-Repair loops have a budget of **max 3 attempts** — after exhaustion, the issue is escalated to the user (`ASK_USER`).
+- required artifacts are missing or invalid
+- Reviewer returns `BLOCKED`
+- QA returns `BLOCKED`
+- Security returns `BLOCKED` for high/critical issues
+- build/CI is red in integration or release
 
-## Configuration files
+Repair loops have a retry budget of 3 attempts per task and loop type. After budget exhaustion, Orchestrator enters `ASK_USER`.
 
-```
+## Status Semantics
+
+Global status enum:
+
+- `OK`
+- `BLOCKED`
+- `FAIL`
+- `NEEDS_INFO` (Researcher only)
+- `NEEDS_DECISION` (Security medium-risk decisions)
+
+`NEEDS_DECISION` is a deterministic trigger for `ASK_USER`.
+
+## Using This Framework
+
+1. Start with the Orchestrator agent.
+2. Provide: goal, constraints, and `project_type` (`web|api|cli|lib|mixed`).
+3. Let the Orchestrator create/reuse a session in `.agents-work/`.
+4. Track progress in:
+   - `.agents-work/<session>/tasks.yaml`
+   - `.agents-work/<session>/status.json`
+5. Respond only when `ASK_USER` is raised.
+6. Review final `report.md` and acceptance checks at `DONE`.
+
+## Repository Layout
+
+```text
 .github/
-└── agents/
-    ├── 00-orchestrator.md    # Orchestrator role definition
-    ├── 01-spec-agent.md      # SpecAgent role definition
-    ├── 02-architect.md       # Architect role definition
-    ├── 03-planner.md         # Planner role definition
-    ├── 04-coder.md           # Coder role definition
-    ├── 05-reviewer.md        # Reviewer role definition
-    ├── 06-qa.md              # QA role definition
-    ├── 07-security.md        # Security role definition
-    ├── 08-integrator.md      # Integrator role definition
-    ├── 09-docs.md            # Docs role definition
-    ├── 10-designer.md        # Designer role definition
-    ├── 11-researcher.md      # Researcher role definition
-    ├── CONTRACT.md           # Global agent I/O contract
-    └── WORKFLOW.md           # State machine, dispatch rules
+  agents/
+    00-orchestrator.md
+    01-spec-agent.md
+    02-architect.md
+    03-planner.md
+    04-coder.md
+    05-reviewer.md
+    06-qa.md
+    07-security.md
+    08-integrator.md
+    09-docs.md
+    10-designer.md
+    11-researcher.md
+    CONTRACT.md
+    WORKFLOW.md
+.agents-work/
+demo-pomidoro/
+demo-traffic-simulator/
+README.md
 ```
-## Tech stack
 
-- **Environment:** VS Code + GitHub Copilot Chat (custom agents / chat participants)
-- **Multi-model:** Claude Opus 4.6, GPT-5.3-Codex, Gemini 3 Pro, Claude Haiku 4.5
-- **Demo projects:** Vanilla JS, zero frameworks, zero dependencies, static hosting
-- **Quality gates:** `npm test`, `npm run lint`, `npm run build` + manual checklists
-- **Artifacts:** Markdown, JSON, YAML — all version-controlled in the repo
+## Demo Projects
 
-## How it works
+- `demo-pomidoro`: Pomodoro timer app with distraction journal.
+- `demo-traffic-simulator`: minimal traffic simulation on Canvas.
 
-1. The user describes a goal in chat with the Orchestrator
-2. Orchestrator creates a session in `.agents-work/` and delegates to **SpecAgent** (specification)
-3. **Researcher** investigates technologies/patterns if needed, then **Architect** designs the architecture, **Planner** breaks it into tasks
-4. **Coder** implements tasks one by one
-5. After each task: **Reviewer** (code review) → **QA** (tests) → optionally **Security**
-6. Repair loops (`FIX_*`) if a gate blocks, max 3 attempts
-7. **Integrator** ensures green build, **Docs** generates documentation
-8. Orchestrator closes the session with `DONE` status and generates `report.md`
+## Maintenance Guidelines
 
-## Demo projects
+When updating this system:
 
-### 🍅 FocusFlow (demo-pomidoro)
+1. Keep `CONTRACT.md` as the canonical source for schema and status definitions.
+2. Update `WORKFLOW.md` and role files together to avoid drift.
+3. Re-check lean/full mode consistency after every rule change.
+4. Preserve canonical agent names used in dispatch and `recommended_agent`.
 
-A Pomodoro Timer app with a distraction journal. Vanilla JS, zero dependencies, static hosting.
-
-**Features:** 25-min timer (Date.now-based), idle/running/paused/completed states, distraction journal with validation, daily counters, localStorage, JSON import/export, keyboard shortcuts.
-
-**Status:** ✅ DONE — fully delivered by the agent pipeline.
-
-### 🚦 Traffic Simulator (demo-traffic-simulator)
-
-A minimal intersection traffic simulation. Vanilla JS + Canvas API, zero dependencies.
-
-**Features:** map and vehicle rendering on canvas, braking logic, traffic lights, parameter controls (intensity, speed, density), live statistics (active vehicles, average speed, throughput).

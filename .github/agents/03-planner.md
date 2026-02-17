@@ -82,7 +82,8 @@ tasks:
 
 - `not-started` — initial state, set by Planner at creation
 - `in-progress` — set by Coder when implementation begins
-- `completed` — set by Coder after successful implementation (or by the agent that finishes the task)
+- `implemented` — set by Coder after successful implementation; task awaits review/QA/security gates
+- `completed` — set by Orchestrator after ALL gates pass (Reviewer OK + QA OK + Security OK if required)
 - `blocked` — set by any agent that encounters a blocker for this task
 
 Agents MUST update the task's `status` field in `tasks.yaml` when the state changes.

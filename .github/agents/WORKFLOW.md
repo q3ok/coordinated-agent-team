@@ -12,14 +12,19 @@ All artifacts are stored in `.agents-work/<session>/` (see CONTRACT.md for sessi
 
 ### INTAKE
 Agent: SpecAgent
-Produces: `.agents-work/<session>/spec.md`, `.agents-work/<session>/acceptance.json`
-Gate: both files exist and have testable ACs
+Produces: `.agents-work/<session>/spec.md`, `.agents-work/<session>/acceptance.json`, `.agents-work/<session>/status.json` (initial creation)
+Gate: all three files exist, spec.md has testable ACs, status.json has valid schema
 
 ### INTAKE_LEAN (lean mode only)
-Orchestrator creates minimal artifacts directly (no SpecAgent):
+Orchestrator delegates initial artifact creation to SpecAgent (with lean flag).
+SpecAgent is used here as a utility for artifact bootstrapping — it is not a mandatory dispatch in the lean mode agent list.
 - Short `.agents-work/<session>/spec.md` (goal + AC only)
 - `.agents-work/<session>/acceptance.json`
 - Single-task `.agents-work/<session>/tasks.yaml`
+- `.agents-work/<session>/status.json` (initial creation)
+- No `architecture.md` — lean mode skips the DESIGN phase entirely
+
+Note: Orchestrator does not create files directly — it delegates via dispatch. Exception: if SpecAgent is unavailable in lean mode, Orchestrator MAY create minimal artifacts directly as the sole exception to the no-edit rule.
 Gate: artifacts exist. If Coder discovers complexity, exit lean mode and restart from full INTAKE.
 
 ### DESIGN
@@ -41,8 +46,8 @@ For each task ready (deps done):
 Gate per task:
 - Reviewer OK
 - QA OK (if required)
-- Security OK (if required)
-- Task marked `status: completed` in `.agents-work/<session>/tasks.yaml`
+- Security OK (if required). If Security returns `NEEDS_DECISION` (medium findings), Orchestrator enters ASK_USER before proceeding.
+- Task marked `status: implemented` by Coder, then promoted to `completed` by Orchestrator after all gates pass
 
 ### ASK_USER
 Trigger: Orchestrator enters this state when human judgment is needed.
@@ -53,12 +58,14 @@ Examples:
 - Reviewer PASS WITH NOTES (user decides which notes to fix)
 - Design trade-offs with no clear winner
 - Scope creep risk (confirm before expanding)
-- Security medium findings (fix-now vs fix-later is a product decision)
+- Security medium findings — deterministic trigger: Security agent returns `status: NEEDS_DECISION`, Orchestrator MUST enter ASK_USER (see Security agent spec)
 
 ### INTEGRATE
-Agent: Integrator
+Agent: Integrator (full mode) or Orchestrator directly (lean mode)
 Purpose: green build, conflicts, full pipeline
 Gate: CI/build green OR if no CI, local commands from acceptance_checks pass
+
+In **lean mode**, Orchestrator runs acceptance_checks commands directly instead of dispatching Integrator. If checks fail, enter FIX_BUILD as normal.
 
 ### RELEASE
 Agents:
@@ -83,13 +90,15 @@ After 3 failed attempts, Orchestrator MUST enter ASK_USER with:
 Retry counts are tracked in `.agents-work/<session>/status.json` under `retry_counts`.
 
 ## Dispatch rules (must)
-Orchestrator MUST use all agents at least once in a full run:
+Orchestrator MUST use all core agents at least once in a full run:
 - SpecAgent, Architect, Planner, Coder, Reviewer, QA, Security, Integrator, Docs
 Optional (used when applicable):
 - Researcher (when task requires technology evaluation, codebase analysis, or best practices research)
 - Designer (when task involves UI/UX)
 - ASK_USER (when human judgment is needed)
 Exception: Security can be "OK no findings," but must be run.
+
+**Lean mode exception**: In lean mode, only Coder, Reviewer, and (conditionally) QA and Security are mandatory. SpecAgent is used for INTAKE_LEAN artifact creation (delegated by Orchestrator) but is not counted as a "mandatory core agent" for dispatch tracking. Architect, Planner, Designer, Integrator, Docs, and Researcher are skipped in lean mode. Orchestrator handles INTEGRATE checks directly.
 
 ## Definition of Done (global)
 DONE only if:

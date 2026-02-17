@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Greeting Card Generator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Greeting Card Generator</h1>
+
+      <section class="card" aria-labelledby="form-heading">
+        <h2 id="form-heading">Utwórz kartkę</h2>
+
+        <label for="name-input">Twoje imię</label>
+        <input
+          id="name-input"
+          type="text"
+          placeholder="Wpisz imię…"
+        />
+
+        <fieldset class="color-fieldset">
+          <legend>Wybierz kolor</legend>
+          <div class="color-options">
+            <label class="color-option">
+              <input class="sr-only" type="radio" name="color" value="#FF6B6B" checked />
+              <span class="color-swatch" style="background-color: #FF6B6B;" aria-hidden="true"></span>
+              <span class="color-label">Coral</span>
+            </label>
+            <label class="color-option">
+              <input class="sr-only" type="radio" name="color" value="#4ECDC4" />
+              <span class="color-swatch" style="background-color: #4ECDC4;" aria-hidden="true"></span>
+              <span class="color-label">Sky Blue</span>
+            </label>
+            <label class="color-option">
+              <input class="sr-only" type="radio" name="color" value="#FFE66D" />
+              <span class="color-swatch" style="background-color: #FFE66D;" aria-hidden="true"></span>
+              <span class="color-label">Sunshine</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button id="generate-btn" type="button">Generuj</button>
+        <p id="error-msg" class="error-msg" role="alert" hidden></p>
+      </section>
+
+      <section id="card-section" aria-labelledby="card-heading">
+        <h2 id="card-heading" class="sr-only">Podgląd kartki</h2>
+        <div id="card-output" aria-live="polite"></div>
+      </section>
+
+      <noscript>
+        <p>Ta aplikacja wymaga włączonego JavaScript.</p>
+      </noscript>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

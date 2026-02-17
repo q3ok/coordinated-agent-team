@@ -1,0 +1,60 @@
+{
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "description": "Page loads with a name text input, 3 color preset options, and a Generate button visible.",
+      "verify": [
+        "manual: Open index.html in a browser and confirm the name input, 3 color options, and Generate button are visible."
+      ]
+    },
+    {
+      "id": "AC-002",
+      "description": "Typing a name and clicking Generate displays a styled greeting card on the page.",
+      "verify": [
+        "manual: Type 'Alice' in the name field, select a color, click Generate, and confirm a styled card appears."
+      ]
+    },
+    {
+      "id": "AC-003",
+      "description": "The greeting card text reads 'Hello, {name}!' where {name} is the entered name.",
+      "verify": [
+        "manual: Type 'Bob' and click Generate. Confirm the card text is exactly 'Hello, Bob!'."
+      ]
+    },
+    {
+      "id": "AC-004",
+      "description": "The greeting card background color matches the selected preset color.",
+      "verify": [
+        "manual: Select each of the 3 color presets in turn, generate a card, and confirm the card background matches the selection."
+      ]
+    },
+    {
+      "id": "AC-005",
+      "description": "Changing the name or color and clicking Generate again updates the existing card in place (no duplicates).",
+      "verify": [
+        "manual: Generate a card, then change the name and color, click Generate again, and confirm the card updates without a second card appearing."
+      ]
+    },
+    {
+      "id": "AC-006",
+      "description": "Submitting an empty or whitespace-only name shows a validation message or safe fallback instead of a broken card.",
+      "verify": [
+        "manual: Leave the name field empty (or enter only spaces), click Generate, and confirm a validation message appears or the card is not generated."
+      ]
+    },
+    {
+      "id": "AC-007",
+      "description": "Special characters (e.g., '<script>alert(1)</script>') in the name are rendered as plain text, not executed.",
+      "verify": [
+        "manual: Enter '<script>alert(1)</script>' as the name, click Generate, and confirm the text is displayed literally with no script execution."
+      ]
+    },
+    {
+      "id": "AC-008",
+      "description": "The application works by opening index.html directly in a browser via file:// protocol — no server, no build step required.",
+      "verify": [
+        "manual: Double-click index.html to open in default browser. Confirm full functionality without any server or build step."
+      ]
+    }
+  ]
+}

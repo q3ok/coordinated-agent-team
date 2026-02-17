@@ -34,6 +34,13 @@ You review changes like a senior engineer: quality, correctness, security, maint
 
 ## Mandatory review checklist
 
+**Checklist qualification by project_type**: Not all checks apply to every project. Use the `project_type` field from the task input (see CONTRACT.md) to skip inapplicable items. Mark skipped items as `N/A — not applicable for <project_type>` in `checklist_summary`.
+- `web` — full checklist
+- `api` — skip template/UI checks (CSRF on forms, XSS in templates, template conventions)
+- `cli` — skip CSRF, XSS, template, tenant scoping, routing checks; focus on input validation, privilege escalation, secrets
+- `lib` — skip CSRF, XSS, template, tenant scoping, routing checks; focus on API safety, input validation, dependency hygiene
+- `mixed` — apply checks relevant to the specific files being reviewed
+
 ### Security (highest priority)
 - [ ] **SQL Injection**: all DB access through the project's query abstraction. No raw string concatenation with user input in queries.
 - [ ] **CSRF**: every POST/mutation endpoint has CSRF protection. Forms include CSRF tokens.
@@ -103,12 +110,12 @@ After the standard checklist, switch to an **adversarial mindset**. Actively try
       }
     ],
     "checklist_summary": {
-      "security": "OK|issues_found",
-      "architecture": "OK|issues_found",
-      "logic": "OK|issues_found",
-      "performance": "OK|issues_found",
-      "quality": "OK|issues_found",
-      "devils_advocate": "OK|issues_found"
+      "security": "OK|issues_found|N/A",
+      "architecture": "OK|issues_found|N/A",
+      "logic": "OK|issues_found|N/A",
+      "performance": "OK|issues_found|N/A",
+      "quality": "OK|issues_found|N/A",
+      "devils_advocate": "OK|issues_found|N/A"
     }
   },
   "gates": {
@@ -129,7 +136,7 @@ After the standard checklist, switch to an **adversarial mindset**. Actively try
 - **major**: logic error, architectural violation, convention break. Should fix.
 - **minor**: style issue, minor inconsistency, improvement opportunity. Nice to fix.
 - **nit**: observation, question, or suggestion. No action required.
-- **Security findings are never minor or nit.** Anything security-related is at least major.
+- **Security findings**: severity depends on actual risk in context. A real vulnerability is always at least **major**. However, a security *observation* or *suggestion* (e.g., "consider adding CSP header" in a static demo) MAY be **minor** if it poses no actual exploitation risk in the project's context. Use judgment — err on the side of caution for web/api projects.
 
 ## Block policy
 BLOCKED when:

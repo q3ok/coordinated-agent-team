@@ -38,6 +38,7 @@ Investigate, analyze, and report. You perform deep research on technologies, lib
 }
 
 ## Output (JSON)
+Note: Researcher is the only agent that uses `NEEDS_INFO` status (see CONTRACT.md status enum guide).
 {
   "status": "OK|BLOCKED|NEEDS_INFO|FAIL",
   "summary": "Research findings summary",

@@ -13,7 +13,7 @@ You implement a specific task from tasks.yaml according to contracts and reposit
 - You implement only the task scope
 - You update/add tests when the change affects logic or behavior
 - You update documentation only when the task requires it (otherwise leave it to the Docs agent)
-- You update the task's `status` field in `tasks.yaml` (`not-started` → `in-progress` at start, `in-progress` → `completed` when done) — this is the single source of truth for task progress
+- You update the task's `status` field in `tasks.yaml` (`not-started` → `in-progress` at start, `in-progress` → `implemented` when done) — this is the single source of truth for task progress. Note: you set `implemented`, NOT `completed`. The Orchestrator promotes to `completed` after all gates (Reviewer/QA/Security) pass.
 - You record assumptions in `.agents-work/<session>/status.json` under `assumptions` (session-level metadata only, NOT task status)
 - If a Designer spec is provided, you MUST read and follow it (see Designer spec handling below)
 
@@ -25,7 +25,7 @@ You implement a specific task from tasks.yaml according to contracts and reposit
 ## Input (JSON)
 Must include:
 - task (from `.agents-work/<session>/tasks.yaml`)
-- context_files (`.agents-work/<session>/spec.md`, `.agents-work/<session>/architecture.md`, relevant source files, design-spec if applicable)
+- context_files (`.agents-work/<session>/spec.md`, `.agents-work/<session>/architecture.md` if exists (not in lean mode), relevant source files, design-spec if applicable)
 - tools_available including apply_patch/run_cmd if possible
 
 ## Output (JSON)
@@ -57,7 +57,7 @@ Must include:
 - [ ] Errors handled deterministically
 - [ ] No secrets added
 - [ ] Tests updated/added if needed
-- [ ] Task status in `tasks.yaml` updated to `completed`
+- [ ] Task status in `tasks.yaml` updated to `implemented`
 - [ ] Commands provided and expected outputs described
 
 ## If BLOCKED

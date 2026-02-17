@@ -1,0 +1,21 @@
+{
+  "current_state": "DONE",
+  "session": "2026-02-17_demo-greeting",
+  "assumptions": [
+    "Modern desktop browser with ES6+ support",
+    "Three hardcoded color presets — not user-configurable beyond selection",
+    "Greeting text format is exactly 'Hello, {name}!'",
+    "App is 3 files in a flat directory: index.html, app.js, styles.css",
+    "No formal WCAG AA audit required",
+    "Flat directory structure (no public/ subfolder) — per ADR-001",
+    "Pure functions (validateName, greetingText) exported for testability"
+  ],
+  "user_decisions": [],
+  "retry_counts": {
+    "T-001": { "FIX_REVIEW": 0, "FIX_TESTS": 0, "FIX_SECURITY": 0, "FIX_BUILD": 0 },
+    "T-002": { "FIX_REVIEW": 0, "FIX_TESTS": 0, "FIX_SECURITY": 0, "FIX_BUILD": 0 }
+  },
+  "known_issues": [],
+  "last_ci_result": "green",
+  "last_update": "2026-02-17T12:00:00Z"
+}

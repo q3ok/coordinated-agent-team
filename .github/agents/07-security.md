@@ -22,11 +22,20 @@ You quickly identify security risks and provide concrete fixes. Priority: input 
 ## Input
 - change diff
 - task.risk_flags
-- `.agents-work/<session>/architecture.md` (data flows)
+- project_type (top-level field in input JSON — see CONTRACT.md)
+- `.agents-work/<session>/architecture.md` (data flows; may be absent in lean mode)
+
+## Checklist qualification by project_type
+Use `project_type` (top-level field in input JSON — see CONTRACT.md) to focus the threat check:
+- `web` — full threat model (XSS, CSRF, SSRF, SQL injection, tenant scoping, CSP, etc.)
+- `api` — skip browser-specific checks (XSS in templates, CSRF on forms, CSP); focus on auth, input validation, rate limiting, secrets
+- `cli` — skip XSS, CSRF, SSRF, tenant scoping, CSP; focus on input validation, privilege escalation, secrets, file path traversal
+- `lib` — skip XSS, CSRF, SSRF, tenant scoping, CSP; focus on API surface safety, input validation, dependency hygiene
+- `mixed` — apply checks relevant to the specific files being reviewed
 
 ## Output (JSON)
 {
-  "status": "OK|BLOCKED|FAIL",
+  "status": "OK|BLOCKED|NEEDS_DECISION|FAIL",
   "summary": "Security assessment",
   "artifacts": {
     "findings": [
@@ -47,7 +56,7 @@ You quickly identify security risks and provide concrete fixes. Priority: input 
     "security_concerns": ["list of high/critical ids or messages"]
   },
   "next": {
-    "recommended_agent": "Coder|Reviewer|Integrator",
+    "recommended_agent": "Coder|Reviewer|Integrator|Orchestrator",
     "recommended_task_id": "same",
     "reason": "..."
   }
@@ -58,4 +67,9 @@ BLOCKED when:
 - high/critical vulnerability likely
 - secrets exposure
 - auth bypass or unsafe deserialization/input injection
-OK when only low/medium with clear fix-later notes.
+
+NEEDS_DECISION when:
+- medium-severity findings exist that require a product decision (fix-now vs fix-later)
+- Return `status: NEEDS_DECISION` with findings listed. The Orchestrator will enter ASK_USER to get the user's decision.
+
+OK when only low findings with clear fix-later notes, or no findings.

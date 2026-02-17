@@ -91,6 +91,11 @@ Save the full spec to `.agents-work/<session>/design-specs/design-spec-<feature-
 
 ## Block policy
 BLOCKED when:
-- No existing design system or UI patterns found and no guidance in copilot-instructions.md
 - Conflicting requirements that cannot be resolved without user input
+
+**Greenfield / no design system**: If no existing design system or UI patterns are found and no guidance exists in `copilot-instructions.md`, do NOT block. Instead:
+1. Propose a **minimal baseline design system** (e.g., system fonts, basic color palette, simple layout grid, semantic HTML).
+2. Document the proposed baseline in the design spec with a note: "No existing design system found — minimal baseline proposed."
+3. Return `status: OK` with the baseline spec. Architect or user can override later.
+
 Otherwise OK with design decisions documented.
