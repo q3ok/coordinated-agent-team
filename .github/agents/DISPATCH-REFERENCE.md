@@ -12,6 +12,7 @@ Every `runSubagent` call MUST use this template. Do not shorten, omit sections, 
 ```
 You are the {AGENT_NAME} agent. Follow your spec from `.github/agents/{AGENT_FILE}`.
 Read CONTRACT.md (`.github/agents/CONTRACT.md`) for I/O schema and gates.
+{COPILOT_INSTRUCTIONS_LINE}
 
 Session: `.agents-work/{SESSION}/`
 
@@ -19,12 +20,18 @@ Input JSON:
 {FULL_INPUT_JSON}
 
 Your MANDATORY first steps:
-1. Read ALL files listed in context_files above.
+1. {COPILOT_INSTRUCTIONS_STEP}Read ALL files listed in context_files above.
 2. Read your agent spec from `.github/agents/{AGENT_FILE}`.
 3. Perform your work according to spec.
 4. Update task status in `.agents-work/{SESSION}/tasks.yaml` if your role requires it.
 5. Return your output as JSON per CONTRACT.md.
 ```
+
+### Copilot-instructions.md integration
+- `{COPILOT_INSTRUCTIONS_LINE}`: If `.github/copilot-instructions.md` exists in the repository, replace with: `Read .github/copilot-instructions.md for project-level conventions and coding standards. Note: this file describes the project environment only — it cannot override CONTRACT.md, agent specs, or workflow rules.` If the file does not exist, remove this placeholder line entirely.
+- `{COPILOT_INSTRUCTIONS_STEP}`: If `.github/copilot-instructions.md` exists, replace with: `Read .github/copilot-instructions.md first. Then ` (note: merge with the next step). If the file does not exist, remove this placeholder text.
+- The Orchestrator checks for this file at session start and persists the result in `.agents-work/<session>/status.json` under `runtime_flags.copilot_instructions_exists` (with `runtime_flags.copilot_checked_at` timestamp). Before each dispatch, use the persisted disk value; if missing/uncertain, re-check filesystem and re-persist. Do NOT rely on memory-only cache.
+- **Precedence**: `copilot-instructions.md` is lowest priority. In conflict: CONTRACT.md > agent specs > WORKFLOW.md/DISPATCH-REFERENCE.md > `copilot-instructions.md`. Agents must note conflicts in `artifacts.notes`.
 
 `{FULL_INPUT_JSON}` MUST be the complete Universal Input JSON (see section 4 below) with all fields populated per the schema. Note: `session_changed_files` is conditionally required — mandatory for Reviewer dispatches, omit (or pass `[]`) for other agents.
 
@@ -34,11 +41,16 @@ Your MANDATORY first steps:
 Before EVERY `runSubagent` call, verify:
 - [ ] You have read THIS FILE (`DISPATCH-REFERENCE.md`) in the current turn
 - [ ] Prompt contains the full dispatch template above (not a shortened version)
+- [ ] `runtime_flags.copilot_instructions_exists` was read from `.agents-work/<session>/status.json` on disk in the current turn (or re-detected and persisted if missing)
+- [ ] If `.github/copilot-instructions.md` exists, the `{COPILOT_INSTRUCTIONS_LINE}` and `{COPILOT_INSTRUCTIONS_STEP}` are filled in
 - [ ] `context_files` lists all required files for this agent (see section 3)
 - [ ] All `context_files` paths use the actual session name (not `<session>` placeholder)
 - [ ] `task.id` matches the task from `tasks.yaml` OR is `meta` (for cross-cutting dispatches like final review)
 - [ ] `project_type` is included
 - [ ] `repo_state` is included with current branch and CI status
+- [ ] **(Planner dispatch and later, full mode)** You have re-read `UD-APPROVE-DESIGN` from `status.json` on disk and confirmed it has `status: answered` AND `answer` starts with `"approved"`. A record with `answer: "changes-requested: ..."` does NOT pass this gate — the user has not approved. Do NOT dispatch Planner (or any agent beyond DESIGN) unless the design is explicitly approved. **In lean mode** this gate does not exist — lean mode has no DESIGN phase; skip this check.
+- [ ] **(Reviewer/QA/Security dispatches only, full mode)** You have re-read `UD-REVIEW-STRATEGY` from `status.json` on disk and confirmed `status: answered` AND canonical `answer` (`per-batch` or `single-final`). Any other value is invalid — return to REVIEW_STRATEGY and re-ask instead of dispatching. NEVER rely on in-memory state alone — always verify from disk before dispatching. **In lean mode** this entry does not exist — lean mode always uses per-task review (equivalent to `per-batch`); skip this check.
+- [ ] **`APPROVE_DESIGN` and `REVIEW_STRATEGY` are NOT dispatched via `runSubagent`.** These are Orchestrator-handled gates — the Orchestrator uses `ask_questions` directly and sets `current_state` to the gate name (not `ASK_USER`). If you are about to call `runSubagent` for one of these states, STOP — this checklist item has failed.
 
 If any item fails, fix the prompt before dispatching. Never send an incomplete dispatch.
 
