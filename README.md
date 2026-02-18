@@ -1,6 +1,41 @@
 ﻿# Coordinated Agent Team
 
-Coordinated Agent Team is a framework for autonomous software delivery with a multi-agent system. It defines clear agent roles, a deterministic workflow, strict I/O contracts, and artifact-based coordination.
+Coordinated Agent Team is a prompt-driven multi-agent system for autonomous software delivery. It defines clear agent roles, a deterministic workflow, strict I/O contracts, and artifact-based coordination.
+
+## Contents
+
+- [Quick Start](#quick-start)
+- [Design Philosophy](#design-philosophy)
+- [What This Repository Contains](#what-this-repository-contains)
+- [Why Multi-Agent Delivery](#why-multi-agent-delivery)
+- [Workflow](#workflow)
+- [Agent Roster](#agent-roster)
+- [Configuration Notes (Models & Tools)](#configuration-notes-models--tools)
+- [Contract and Artifact Model](#contract-and-artifact-model)
+- [Quality Gates](#quality-gates)
+- [Status Semantics](#status-semantics)
+- [Using This System](#using-this-system)
+- [Hints](#hints)
+- [Repository Layout](#repository-layout)
+- [Demo Projects](#demo-projects)
+- [Maintenance Guidelines](#maintenance-guidelines)
+
+## Quick Start
+
+1. Copy `.github/agents/` into your project (see [Using This System](#using-this-system) for copy/sparse-checkout commands).
+2. Add `.agents-work/` to your `.gitignore` (agent runtime artifacts).
+3. In VS Code (GitHub Copilot Chat), start with:
+   - `@orchestrator Build X with constraints Y (project_type: web|api|cli|lib|mixed). Ask me to confirm the plan before coding.`
+4. Track progress in `.agents-work/<session>/tasks.yaml` and `.agents-work/<session>/status.json`, respond to `ASK_USER`, then review `.agents-work/<session>/report.md`.
+
+## Design Philosophy
+
+This agent pack is written and maintained as if it were a program:
+
+- the “code” is a set of prompts: precise, human-readable role instructions + a strict contract
+- the model is treated as an interpreter/executor of those prompts (natural language)
+- the durable “runtime state” is persisted to artifacts under `.agents-work/`
+- the workflow is a deterministic state machine with explicit gates
 
 ## What This Repository Contains
 
@@ -8,12 +43,12 @@ Coordinated Agent Team is a framework for autonomous software delivery with a mu
 - `.github/agents/WORKFLOW.md`: state machine, dispatch rules, lean mode behavior, and repair loops.
 - `.github/agents/DISPATCH-REFERENCE.md`: mandatory dispatch template, context_files matrix, and pre-dispatch validation checklist used by Orchestrator.
 - `.github/agents/00-orchestrator.md` to `.github/agents/11-researcher.md`: role-specific instructions for each agent.
-- `.agents-work/<session>/...`: runtime artifacts generated per session.
-- `demo-click-message`, `demo-greeting`, `demo-pomidoro`, and `demo-traffic-simulator`: example projects used with this workflow.
+- `.agents-work/<session>/...`: runtime artifacts generated per session (gitignored; not committed to version control).
+- `demo-click-message`, `demo-greeting`, `demo-pomidoro`, and `demo-traffic-simulator`: example projects built with this workflow.
 
 ## Why Multi-Agent Delivery
 
-A single general agent can deliver quickly, but quality can drift when responsibilities are mixed. This project separates concerns into specialized roles so each stage has explicit ownership and gates:
+A single general-purpose agent can deliver quickly, but quality tends to drift when responsibilities are mixed. This project separates concerns into specialized roles so that each stage has explicit ownership and gates:
 
 - specification and acceptance criteria
 - architecture and planning
@@ -104,7 +139,7 @@ Important full-mode rule:
 | 01 | SpecAgent | Claude Opus 4.6 | Produces `spec.md`, `acceptance.json`, and initial session artifacts |
 | 02 | Architect | GPT-5.3-Codex | Designs architecture and ADRs |
 | 03 | Planner | GPT-5.3-Codex | Builds `tasks.yaml` with dependencies and checks |
-| 04 | Coder | Claude Opus 4.6 | Implements scoped tasks and updates task state to `implemented` |
+| 04 | Coder | GPT-5.3-Codex | Implements scoped tasks and updates task state to `implemented` |
 | 05 | Reviewer | GPT-5.3-Codex | Structured code review and risk analysis |
 | 06 | QA | Gemini 3 Pro (Preview) | Test planning, test execution, acceptance validation |
 | 07 | Security | GPT-5.3-Codex | Security assessment and decision-trigger findings |
@@ -112,6 +147,36 @@ Important full-mode rule:
 | 09 | Docs | Claude Haiku 4.5 | README/report updates and delivery documentation |
 | 10 | Designer | Gemini 3 Pro (Preview) | UI/UX design specs |
 | 11 | Researcher | Claude Opus 4.6 | Evidence-based technical research |
+
+The model names above are the default `model` values from the agent frontmatter. Adjust them as needed (see configuration notes below).
+
+## Configuration Notes (Models & Tools)
+
+Each agent file in `.github/agents/*.md` starts with a YAML frontmatter section (between `---` markers). You can configure the system by editing it:
+
+- `model`: set the exact model name you want that agent to use
+- `tools`: enable/disable tools per agent (keep it minimal for safety and cost)
+
+Example:
+
+```yaml
+---
+name: coder
+tools: [vscode, execute, read, agent, edit, search, web, todo]
+model: "GPT-5.3-Codex"
+---
+```
+
+> Note: Tune models to your own needs and experience by editing the frontmatter and setting `model` to the exact model name you want. I’m still testing different configurations. Because new models keep appearing and existing models change over time, the “best” configuration can vary from day to day. Also consider cost: in repair loops (review/test/security fixes) some agents/models can be invoked multiple times for the same task.
+
+### MCP / custom VS Code tools
+
+If you have an MCP server (or other custom VS Code tools) and you want agents to use it:
+
+- add the tool(s) to the Orchestrator frontmatter (`.github/agents/00-orchestrator.md`) and
+- add the same tool(s) to whichever agents should use it (or just to all agents for simplicity)
+
+Reason: the Orchestrator cannot dispatch a subagent with a larger tool set than it owns itself (subagents are constrained to the Orchestrator's tool set).
 
 ## Contract and Artifact Model
 
@@ -172,7 +237,7 @@ Global status enum:
 
 `NEEDS_DECISION` is a deterministic trigger for `ASK_USER`.
 
-## Using This Framework
+## Using This System
 
 ### 1. Copy the agent pack into your project
 
@@ -224,6 +289,13 @@ Then copy the files into your target project.
 5. Respond when Orchestrator enters `ASK_USER`.
 6. At the end, review `.agents-work/<session>/report.md`.
 
+## Hints
+
+- In your initial prompt, ask the Orchestrator to request your approval of plans before coding starts. This helps confirm that the spec and documentation match your expectations, lets you add comments during execution, and enables an explicit re-confirmation loop after updates.
+- If something stalls during execution (for example, a timeout or an interrupted run), you can usually continue without friction because artifacts are persisted on disk. Send a follow-up prompt to the Orchestrator saying the run was interrupted and asking it to continue; it will recover context from project files.
+- The workflow can survive VS Code's **Summarized conversation history** (the automatic context compaction that VS Code performs periodically). Because all critical state — spec, tasks, status, architecture, and reports — is persisted to disk under `.agents-work/`, the Orchestrator and other agents can re-read these artifacts after summarization and reconstruct enough context to continue. Note, however, that results may vary: the quality of recovery depends on which details the summary retains and how the model re-interprets them.
+- If you need work done in a specific way at a specific stage (for example, asking the Designer to provide ASCII mockups for all target layouts), include that requirement directly in the initial prompt.
+
 ## Repository Layout
 
 ```text
@@ -241,16 +313,24 @@ Then copy the files into your target project.
     09-docs.md
     10-designer.md
     11-researcher.md
-    DISPATCH-REFERENCE.md
     CONTRACT.md
+    DISPATCH-REFERENCE.md
     WORKFLOW.md
 .agents-work/
+.gitignore
 demo-click-message/
 demo-greeting/
 demo-pomidoro/
 demo-traffic-simulator/
+LICENSE
 README.md
 ```
+
+- `.github/agents/`: the agent pack (roles, contract, workflow, and dispatch reference)
+- `.agents-work/`: per-session runtime artifacts generated by the workflow (gitignored)
+- `demo-*/`: example projects built with this workflow
+- `LICENSE`: project license
+- `README.md`: overview and usage instructions
 
 ## Demo Projects
 
@@ -258,6 +338,8 @@ README.md
 - `demo-click-message`: minimal click-to-message static demo.
 - `demo-pomidoro`: Pomodoro timer app with distraction journal.
 - `demo-traffic-simulator`: minimal traffic simulation on Canvas.
+
+Note: Parts of the demo content are mixed-language. Some models generated artifacts in Polish instead of English, and this repository intentionally keeps those outputs as-is.
 
 ## Maintenance Guidelines
 
