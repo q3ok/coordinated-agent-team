@@ -1,2 +1,5 @@
 # only for internal use for agents, do not commit the ageents work directory
 .agents-work/
+
+# generated build artifacts
+demo-pacman

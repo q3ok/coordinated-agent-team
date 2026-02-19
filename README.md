@@ -393,12 +393,18 @@ README.md
 
 ## Demo Projects
 
+### v0.1.0 and below
+
 - `demo-greeting`: lightweight greeting card demo.
 - `demo-click-message`: minimal click-to-message static demo.
 - `demo-pomidoro`: Pomodoro timer app with distraction journal.
 - `demo-traffic-simulator`: minimal traffic simulation on Canvas.
 
-Note: Parts of the demo content are mixed-language. Some models generated artifacts in Polish instead of English, and this repository intentionally keeps those outputs as-is.
+> Note: Parts of the demo content are mixed-language. Some models generated artifacts in Polish instead of English, and this repository intentionally keeps those outputs as-is.
+
+### v0.2.0
+
+- `demo-function-plot-cli`: Python terminal app for safely plotting `f(x)`, evaluating and marking points on the graph, persisting recent expressions, and exporting rendered plots to `.txt`.
 
 ## Maintenance Guidelines
 
