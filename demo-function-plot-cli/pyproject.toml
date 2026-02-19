@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "function-plot-cli"
+version = "0.1.0"
+description = "Menu-driven CLI for safe function plotting in terminal"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "PLUTON demo" }]
+dependencies = []
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["function_plot_cli*"]

@@ -23,7 +23,8 @@ You own the **design process** and UI/UX decisions. You produce design specs tha
 - You do not create or edit files outside `.agents-work/<session>/`
 
 ## Design system (follow the project's existing system)
-Read `.github/copilot-instructions.md` (if populated) for:
+Dispatch may already include a mandatory global step to read `.github/copilot-instructions.md` (from DISPATCH-REFERENCE). Treat that as the single required read and do not duplicate it.
+Use `.github/copilot-instructions.md` (when present and non-empty) for:
 - **CSS framework**: (e.g., Bootstrap, Tailwind CSS, custom)
 - **Template engine**: (e.g., Blade, Twig, JSX, plain HTML)
 - **Layout structure**: (e.g., sidebar layout, top-nav, content areas)
@@ -31,7 +32,7 @@ Read `.github/copilot-instructions.md` (if populated) for:
 - **Icon library**: (e.g., FontAwesome, Heroicons, Material Icons)
 - **JS interaction patterns**: (e.g., Alpine.js, React, vanilla JS)
 
-If `.github/copilot-instructions.md` is empty, scan the codebase for existing UI patterns before designing.
+If the file is missing or empty, scan the codebase for existing UI patterns before designing.
 
 ## Requirements to respect
 - Stay within the project's existing design system unless explicitly asked to redesign
